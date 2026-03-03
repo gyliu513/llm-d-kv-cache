@@ -19,6 +19,7 @@ BUILDER := $(shell command -v buildah >/dev/null 2>&1 && echo buildah || echo $(
 UDS_TOKENIZER_IMAGE ?= llm-d-uds-tokenizer:e2e-test
 FS_BACKEND_NAME ?= llmd-fs-backend
 FS_BACKEND_DEV_IMG ?= $(IMAGE_TAG_BASE)/$(FS_BACKEND_NAME):$(DEV_VERSION)
+PVC_EVICTOR_IMAGE ?= llm-d-pvc-evictor:latest
 
 # go source files
 SRC = $(shell find . -type f -name '*.go')
@@ -238,6 +239,11 @@ image-build-uds: check-container-tool ## Build the UDS tokenizer container image
 		--build-arg TARGETOS=$(TARGETOS) \
 		--build-arg TARGETARCH=$(TARGETARCH) \
 		-t $(UDS_TOKENIZER_IMAGE) services/uds_tokenizer
+
+.PHONY: image-build-pvc-evictor
+image-build-pvc-evictor: check-container-tool ## Build the PVC Evictor container image
+	@printf "\033[33;1m==== Building PVC Evictor image $(PVC_EVICTOR_IMAGE) ====\033[0m\n"
+	$(CONTAINER_TOOL) build -t $(PVC_EVICTOR_IMAGE) -f kv_connectors/pvc_evictor/Dockerfile kv_connectors
 
 .PHONY: e2e-test-uds
 e2e-test-uds: check-go download-zmq image-build-uds ## Run UDS tokenizer e2e tests (requires Docker or Podman)
